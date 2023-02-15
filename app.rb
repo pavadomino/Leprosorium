@@ -24,7 +24,8 @@ configure do
 end
 
 get '/' do
-  erb "Hello! <a href=\"https://github.com/bootstrap-ruby/sinatra-bootstrap\">Original</a> pattern has been modified for <a href=\"http://rubyschool.us/\">Ruby School</a>"
+  @results = @db.execute 'select * from Posts order by id desc'
+  erb :index
 end
 
 get '/new' do
@@ -45,5 +46,11 @@ post '/new' do
     created_date
   )
   values(?,datetime())', [content]
-  erb "Thank you for your Post"
+  redirect to '/'
+end
+
+get '/details/:post_id' do
+  post_id = params[:post_id] # parameter from url
+
+  erb "Displaying information for post with id #{post_id}"
 end
