@@ -17,6 +17,7 @@ configure do
   @db.execute 'CREATE TABLE IF NOT EXISTS Posts
   (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT,
     created_date DATE,
     content TEXT
   )'
@@ -40,33 +41,46 @@ get '/new' do
 end
 
 post '/new' do
-  content = params[:content]
+  @content = params[:content]
+  @username = params[:username]
 
-  if content.length <= 0
-    @error = 'Type post text'
+  hh = {
+    :username => 'Type username',
+    :content => 'Type content'
+  }
+
+  @error = hh.select { |key,value| params[key] == ''}.values.join(", ")
+
+  if @error != ''
     return erb :new
   end
 
   @db.execute 'insert into Posts
   (
+    username,
     content,
     created_date
   )
-  values(?,datetime())', [content]
+  values(?,?,datetime())', [@username, @content]
   redirect to '/'
 end
 
 get '/details/:post_id' do
   post_id = params[:post_id] # parameter from url
   results = @db.execute 'select * from Posts where id = ?', [post_id]
-  @row = results[0]
-  @comments = @db.execute 'select * from Comments where post_id = ? order by id', [post_id]
-  erb :details
-end
+    @row = results[0]
+    @comments = @db.execute 'select * from Comments where post_id = ? order by id', [post_id]
+    erb :details
+  end
 
 post '/details/:post_id' do
   post_id = params[:post_id]
   comment = params[:comment]
+
+  if comment.length <= 0
+    @error = "Type content of the comment"
+  end
+
   @db.execute 'insert into Comments
   (
     content,
