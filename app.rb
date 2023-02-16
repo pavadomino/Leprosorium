@@ -28,7 +28,6 @@ configure do
     content TEXT,
     post_id INTEGER
   )'
-  @db.close
 end
 
 get '/' do
@@ -70,15 +69,17 @@ get '/details/:post_id' do
   results = @db.execute 'select * from Posts where id = ?', [post_id]
     @row = results[0]
     @comments = @db.execute 'select * from Comments where post_id = ? order by id', [post_id]
+    @error = params[:error]
     erb :details
-  end
+end
 
 post '/details/:post_id' do
-  post_id = params[:post_id]
-  comment = params[:comment]
+  @post_id = params[:post_id]
+  @comment = params[:comment]
 
-  if comment.length <= 0
-    @error = "Type content of the comment"
+  if @comment.length <= 0
+    @error = "Type comment text"
+    return redirect to('/details/' + @post_id)
   end
 
   @db.execute 'insert into Comments
@@ -87,7 +88,7 @@ post '/details/:post_id' do
     created_date,
     post_id
   )
-  values(?,datetime(),?)', [comment, post_id]
+  values(?,datetime(),?)', [@comment, @post_id]
 
-  redirect to('/details/' + post_id)
+  redirect to('/details/' + @post_id)
 end
